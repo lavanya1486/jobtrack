@@ -88,7 +88,7 @@ Requires **Docker** and the Docker Compose plugin.
 ```bash
 git clone https://github.com/<your-username>/jobtrack.git
 cd jobtrack
-cp .env.example .env          # optional: change ports, secrets, seeding
+cp .env.example .env          # set secrets and local/demo options
 docker compose up --build
 ```
 
@@ -101,7 +101,8 @@ docker compose up --build
 
 The compose stack is three services: `db` (PostgreSQL 17), `backend` (Spring Boot, Flyway migrates the
 schema on boot) and `frontend` (nginx serving the production build and proxying `/api`, `/actuator` and
-`/swagger-ui` to the backend, so the browser only ever talks to one origin).
+`/swagger-ui` to the backend, so the browser only ever talks to one origin). The example environment
+file enables demo data for local use; set `APP_SEED_DEMO_DATA=false` before any public deployment.
 
 Stop with `docker compose down`, and add `-v` to also drop the database volume.
 
@@ -497,7 +498,9 @@ container works (Railway, Render, Fly.io, a VPS with Docker).
    entirely.
 6. **Health checks**: `/actuator/health` (liveness/readiness probes are enabled). Detailed health is
    only shown to an `ADMIN` token.
-7. Leave `APP_SEED_DEMO_DATA` **unset/false** in production.
+7. Set `APP_SEED_DEMO_DATA=false` in production and replace every local/default password. Do not rely
+   on Compose defaults for public deployments; copy `.env.example`, set a random `APP_JWT_SECRET`,
+   strong PostgreSQL credentials, and the public frontend origin before starting the stack.
 
 Railway-specific notes: expose `PORT` (Railway injects it), attach a PostgreSQL plugin and copy its
 `DATABASE_URL`, and add a `start` command `java -jar target/jobtrack-backend.jar`. Because reminder
