@@ -1,0 +1,17 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+app:
+  # In production a real secret is mandatory: the random-development fallback is disabled.
+  jwt:
+    secret: ${APP_JWT_SECRET}
+
+logging:
+  level:
+    root: WARN
+    com.jobtrack: INFO

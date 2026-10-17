@@ -1,0 +1,128 @@
+server:
+  port: ${PORT:8080}
+  error:
+    # Never leak internals: the error body is produced by GlobalExceptionHandler.
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain
+  shutdown: graceful
+
+spring:
+  application:
+    name: jobtrack-api
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/jobtrack}
+    username: ${DATABASE_USER:jobtrack}
+    password: ${DATABASE_PASSWORD:jobtrack}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: jobtrack-pool
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: 2
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  jpa:
+    # Flyway owns the schema; Hibernate only validates that the mappings still match.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 30
+          time_zone: UTC
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
+        format_sql: false
+    show-sql: ${SHOW_SQL:false}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  threads:
+    virtual:
+      enabled: ${USE_VIRTUAL_THREADS:true}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+      roles: ADMIN
+  health:
+    db:
+      enabled: true
+
+app:
+  jwt:
+    # REQUIRED in production. When blank, a random secret is generated for local development
+    # (and the app refuses to start with the `prod` profile).
+    secret: ${APP_JWT_SECRET:}
+    access-token-ttl: ${APP_JWT_ACCESS_TTL:30m}
+    refresh-token-ttl: ${APP_JWT_REFRESH_TTL:7d}
+    issuer: ${APP_JWT_ISSUER:jobtrack-api}
+
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+
+  reminders:
+    enabled: ${APP_REMINDERS_ENABLED:true}
+    cron: ${APP_REMINDERS_CRON:0 */15 * * * *}
+    deadline-lead-time: ${APP_REMINDERS_DEADLINE_LEAD:48h}
+    interview-prep-lead-time: ${APP_REMINDERS_INTERVIEW_LEAD:24h}
+    follow-up-after: ${APP_REMINDERS_FOLLOW_UP_AFTER:7d}
+    look-ahead-days: ${APP_REMINDERS_LOOK_AHEAD_DAYS:14}
+    email-enabled: ${APP_REMINDERS_EMAIL_ENABLED:false}
+    email-lead-time: ${APP_REMINDERS_EMAIL_LEAD:24h}
+    email-cron: ${APP_REMINDERS_EMAIL_CRON:0 0 8 * * *}
+    housekeeping-cron: ${APP_REMINDERS_HOUSEKEEPING_CRON:0 30 3 * * *}
+    email-from: ${APP_REMINDERS_EMAIL_FROM:no-reply@jobtrack.local}
+
+  seed:
+    demo-data: ${APP_SEED_DEMO_DATA:false}
+    demo-email: ${APP_SEED_DEMO_EMAIL:demo@jobtrack.local}
+    demo-password: ${APP_SEED_DEMO_PASSWORD:Demo1234!}
+    admin-email: ${APP_SEED_ADMIN_EMAIL:admin@jobtrack.local}
+    admin-password: ${APP_SEED_ADMIN_PASSWORD:Admin1234!}
+
+logging:
+  level:
+    root: INFO
+    com.jobtrack: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: WARN
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"

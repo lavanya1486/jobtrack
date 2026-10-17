@@ -1,0 +1,29 @@
+# ---------- build output ----------
+backend/target/
+frontend/dist/
+frontend/coverage/
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---------- dependencies ----------
+frontend/node_modules/
+
+# ---------- environment & secrets ----------
+.env
+.env.*
+!.env.example
+*.pem
+
+# ---------- logs ----------
+*.log
+npm-debug.log*
+
+# ---------- IDE / OS ----------
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ---------- local databases ----------
+pgdata/

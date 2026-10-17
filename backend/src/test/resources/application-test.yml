@@ -1,0 +1,46 @@
+spring:
+  jpa:
+    # The schema comes from Flyway only - Hibernate must never generate or alter it.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 4
+      pool-name: jobtrack-test-pool
+  mail:
+    # Nothing is sent in tests (app.reminders.email-enabled=false); these values only satisfy binding.
+    host: localhost
+    port: 2525
+    properties:
+      mail.smtp.connectiontimeout: 500
+      mail.smtp.timeout: 500
+
+app:
+  jwt:
+    # Fixed so a test can mint its own token (for example an expired one) with the same key.
+    secret: integration-test-secret-that-is-long-enough-for-hs256-signing
+    access-token-ttl: 30m
+    refresh-token-ttl: 7d
+    issuer: jobtrack-api
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+  reminders:
+    # Off: the tests drive generation explicitly instead of racing a 15-minute cron.
+    enabled: false
+    email-enabled: false
+  seed:
+    demo-data: false
+
+logging:
+  level:
+    root: warn
+    com.jobtrack: info
+    org.springframework.test: warn

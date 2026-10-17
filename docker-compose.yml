@@ -1,0 +1,77 @@
+# JobTrack - API, PostgreSQL and the React SPA.
+#
+#   docker compose up --build
+#
+#   frontend  http://localhost:8081   (proxies /api, /actuator and /swagger-ui to the API)
+#   api       http://localhost:8080/swagger-ui/index.html
+#
+# Configuration comes from the environment; copy .env.example to .env to change
+# the defaults instead of editing this file.
+
+name: jobtrack
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jobtrack}
+      POSTGRES_USER: ${POSTGRES_USER:-jobtrack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobtrack}
+    # The port is deliberately not published: only the API container talks to the
+    # database. Use `docker compose exec db psql -U jobtrack jobtrack` to inspect it.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobtrack} -d ${POSTGRES_DB:-jobtrack}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: 8080
+      DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-jobtrack}
+      DATABASE_USER: ${POSTGRES_USER:-jobtrack}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-jobtrack}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-local-dev-only-secret-change-me-0123456789abcdef}
+      APP_JWT_ACCESS_TTL: ${APP_JWT_ACCESS_TTL:-30m}
+      APP_JWT_REFRESH_TTL: ${APP_JWT_REFRESH_TTL:-7d}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:8081}
+      APP_REMINDERS_EMAIL_ENABLED: ${APP_REMINDERS_EMAIL_ENABLED:-false}
+      APP_SEED_DEMO_DATA: ${APP_SEED_DEMO_DATA:-true}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # Where nginx forwards /api, /actuator and /swagger-ui.
+      BACKEND_URL: http://backend:8080
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+
+volumes:
+  pgdata:
