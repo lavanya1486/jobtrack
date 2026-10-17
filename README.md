@@ -25,6 +25,7 @@ frontend, secured with **Spring Security + JWT (access + rotating refresh tokens
 - [Reminders and scheduled jobs](#reminders-and-scheduled-jobs)
 - [Testing](#testing)
 - [Deployment](#deployment)
+- [Free deployment (Render + Neon)](#free-deployment-render--neon)
 - [Project layout](#project-layout)
 - [Known limitations](#known-limitations)
 
@@ -505,6 +506,34 @@ container works (Railway, Render, Fly.io, a VPS with Docker).
 Railway-specific notes: expose `PORT` (Railway injects it), attach a PostgreSQL plugin and copy its
 `DATABASE_URL`, and add a `start` command `java -jar target/jobtrack-backend.jar`. Because reminder
 generation is idempotent at the database level, running more than one API replica is safe.
+
+## Free deployment (Render + Neon)
+
+For a no-payment-required demo deployment, use Render's free web/static services and a Neon free
+PostgreSQL database. Free services sleep when idle, so the first request after inactivity can be slow.
+This setup is suitable for personal projects and demos, not workloads that require guaranteed uptime.
+
+The repository includes [`render.yaml`](render.yaml), which defines the API and frontend services.
+
+1. Create a free Neon project and copy its connection details. The JDBC URL must use the Neon host,
+   database name, user, password and `sslmode=require`, for example:
+
+   ```text
+   jdbc:postgresql://ep-example.us-east-2.aws.neon.tech/jobtrack?sslmode=require
+   ```
+
+2. In Render, choose **New → Blueprint**, connect `lavanya1486/jobtrack`, select the `main` branch,
+   and apply `render.yaml`.
+3. In the `jobtrack-api` service, set `DATABASE_URL`, `DATABASE_USER` and `DATABASE_PASSWORD` from
+   Neon. Keep `APP_SEED_DEMO_DATA=false` and use a generated `APP_JWT_SECRET`.
+4. After the services are created, confirm the public service names. If Render assigns different URLs,
+   update `VITE_API_BASE_URL` on `jobtrack-web` to `https://<api-host>/api` and
+   `APP_CORS_ALLOWED_ORIGINS` on `jobtrack-api` to `https://<frontend-host>`, then redeploy both.
+5. Open the frontend URL, register a new account and verify login, application creation, interviews,
+   analytics and reminders.
+
+Do not commit Neon credentials or any `.env` file. The free Neon database should not be the only copy
+of important data; export periodic backups if the data matters.
 
 ---
 
