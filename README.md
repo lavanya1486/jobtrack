@@ -160,7 +160,6 @@ Only created when `APP_SEED_DEMO_DATA=true` (the Docker Compose default, **off**
 | Role | E-mail | Password |
 | --- | --- | --- |
 | User | `demo@jobtrack.local` | `Demo1234!` |
-| Admin | `admin@jobtrack.local` | `Admin1234!` |
 
 The demo user gets a deterministic set of applications across every status, interview rounds,
 reminders and status history, so the dashboard and analytics have something to show. Change or disable
