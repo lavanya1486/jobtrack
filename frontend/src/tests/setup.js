@@ -7,6 +7,35 @@ import { afterEach, vi } from 'vitest';
  * once here keeps every test file free of setup noise.
  */
 
+// Some Node/jsdom combinations disable the implicit storage area. Keep the browser and global
+// aliases available so tests exercise the same token-storage code without depending on a runtime
+// launch flag such as `--localstorage-file`.
+let testStorage;
+try {
+  testStorage = window.localStorage;
+} catch {
+  testStorage = undefined;
+}
+
+if (!testStorage) {
+  const values = new Map();
+  testStorage = {
+    getItem: (key) => (values.has(key) ? values.get(key) : null),
+    setItem: (key, value) => values.set(String(key), String(value)),
+    removeItem: (key) => values.delete(key),
+    clear: () => values.clear(),
+    key: (index) => Array.from(values.keys())[index] || null,
+    get length() {
+      return values.size;
+    },
+  };
+  Object.defineProperty(window, 'localStorage', { configurable: true, value: testStorage });
+}
+
+if (typeof globalThis.localStorage === 'undefined') {
+  globalThis.localStorage = testStorage;
+}
+
 if (!window.matchMedia) {
   window.matchMedia = (query) => ({
     matches: false,

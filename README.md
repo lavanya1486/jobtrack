@@ -87,7 +87,7 @@ frontend, secured with **Spring Security + JWT (access + rotating refresh tokens
 Requires **Docker** and the Docker Compose plugin.
 
 ```bash
-git clone https://github.com/<your-username>/jobtrack.git
+git clone https://github.com/lavanya1486/jobtrack.git
 cd jobtrack
 cp .env.example .env          # set secrets and local/demo options
 docker compose up --build
