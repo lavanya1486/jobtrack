@@ -39,9 +39,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       PORT: 8080
-      DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-jobtrack}
-      DATABASE_USER: ${POSTGRES_USER:-jobtrack}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-jobtrack}
+      DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://db:5432/${POSTGRES_DB:-jobtrack}}
+      DATABASE_USER: ${DATABASE_USER:-${POSTGRES_USER:-jobtrack}}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-${POSTGRES_PASSWORD:-jobtrack}}
       DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
       # Set this explicitly in .env. The prod profile must never use a known default.
       APP_JWT_SECRET: ${APP_JWT_SECRET}
