@@ -14,7 +14,7 @@ pipeline, the frontend structure, the testing strategy and the trade-offs behind
 | Real security, not UI-level hiding | Every query scoped server-side; role checks in two places; IDOR returns 404 |
 | Runnable by a reviewer in one command | Docker Compose with three services, Flyway on boot, optional demo seed |
 | No silent data loss | Append-only status history, cascade rules stated in the schema, idempotent reminders |
-| Verifiable | 189 backend tests (87 unit, 102 REST integration against real PostgreSQL) + 71 frontend tests |
+| Verifiable | Unit and REST integration tests for the backend, plus frontend tests |
 
 Non-goals (see *Known limitations* in the README): file attachments, e-mail verification flows,
 multi-tenancy beyond per-user isolation, distributed scheduling locks.
@@ -69,7 +69,7 @@ sequenceDiagram
     participant P as ApplicationStatusPolicy
     participant DB as PostgreSQL
 
-    C->>F: PATCH {"status":"INTERVIEW"} + Bearer token
+    C->>F: PATCH {"status":"INTERVIEW"} + access token
     F->>F: parse + verify signature, iss, aud, typ, exp
     F->>DB: load user by id (role read fresh, per request)
     F->>SC: Authentication with ROLE_USER
